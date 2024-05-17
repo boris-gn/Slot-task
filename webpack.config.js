@@ -6,20 +6,18 @@ const TerserPlugin = require("terser-webpack-plugin");
 
 module.exports = (env, argv) => {
   return {
-    stats: "minimal", // Keep console output easy to read.
-    entry: "./src/index.ts", // Your program entry point
+    stats: "minimal",
+    entry: "./src/index.ts",
 
-    // Your build destination
     output: {
       path: path.resolve(__dirname, "dist"),
       filename: "bundle.js",
     },
 
-    // Config for your testing server
     devServer: {
       compress: true,
-      allowedHosts: "all", // If you are using WebpackDevServer as your production server, please fix this line!
-      static: false,
+      allowedHosts: "all",
+      static: path.resolve(__dirname, "dist"),
       client: {
         logging: "warn",
         overlay: {
@@ -32,13 +30,10 @@ module.exports = (env, argv) => {
       host: "0.0.0.0",
     },
 
-    // Web games are bigger than pages, disable the warnings that our game is too big.
     performance: { hints: false },
 
-    // Enable sourcemaps while debugging
     devtool: argv.mode === "development" ? "eval-source-map" : undefined,
 
-    // Minify the code when making a final build
     optimization: {
       minimize: argv.mode === "production",
       minimizer: [
@@ -51,14 +46,26 @@ module.exports = (env, argv) => {
         }),
       ],
     },
-
-    // Explain webpack how to do Typescript
     module: {
       rules: [
         {
           test: /\.ts(x)?$/,
           loader: "ts-loader",
           exclude: /node_modules/,
+        },
+        {
+          test: /\.(ogg|mp3|wav|mpe?g)$/i,
+          loader: "file-loader",
+          options: {
+            name: "assets/sounds/[name].[ext]",
+          },
+        },
+        {
+          test: /\.(png|jpe?g|gif)$/i,
+          loader: "file-loader",
+          options: {
+            name: "assets/images/[name].[ext]",
+          },
         },
       ],
     },
@@ -67,15 +74,15 @@ module.exports = (env, argv) => {
     },
 
     plugins: [
-      // Copy our static assets to the final build
       new CopyPlugin({
-        patterns: [{ from: "static/" }],
+        patterns: [
+          { from: "assets/images", to: "assets/images" },
+          { from: "assets/sounds", to: "assets/sounds" },
+        ],
       }),
-
-      // Make an index.html from the template
       new HtmlWebpackPlugin({
-        template: "./src/index.html",
-        favicon: "./static/favicon.ico",
+        template: "./index.html",
+        favicon: "./assets/favicon.ico",
         hash: true,
         minify: false,
       }),
